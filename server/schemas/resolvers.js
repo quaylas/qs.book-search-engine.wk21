@@ -1,12 +1,15 @@
 const { User, Book } = require('../models');
 const { AuthenticationError } = require('apollo-server-express');
 const { signToken } = require('../utils/auth');
+const {decode} = require('jsonwebtoken');
 
 const resolvers = {
     Query: { 
         me: async (parent, args, context ) => {
             if(context.user) {
-                const userData = await User.findOne({})
+                userEmail = context.user.email;
+                console.log(userEmail, context.user);
+                const userData = await User.findOne({ _id: context.user._id })
                 .select('-__v -password')
                 .populate('savedBooks');
 
@@ -25,7 +28,9 @@ const resolvers = {
         },
         
         login: async (parent, { email, password }) => {
-            const user = await User.findOne({email});
+            const user = await User.findOne({email})
+            .select('-__v')
+            .populate('savedBooks');
             
             if(!user) {
                 throw new AuthenticationError('Incorrect credentials!');
